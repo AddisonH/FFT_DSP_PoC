@@ -57,13 +57,15 @@ def main():
     ax4.set_xlabel('Frequency')
     ax4.set_ylabel('Amplitude')
 
-    plt.show()
+    #plt.show()
+    print_c_array(combined_wave)
 
 
 def print_c_array(array):
     for i in range(array.size):
-        print(f"    {array[i]},")
-    print("};")
+        print(f"{np.float32(array[i])}, ", end='')
+        if i % 8 == 7:
+            print()
     
 def create_lpf_coefficients(numtaps, cutoff):
     return sp.signal.firwin(numtaps, cutoff, window='hamming', pass_zero='lowpass')
