@@ -11,8 +11,8 @@
     <option key="#pinconfiguration#" value="R7FA8D1BHECBD.pincfg"/>
     <option key="#FSPVersion#" value="5.1.0"/>
     <option key="#ConfigurationFragments#" value="Renesas##BSP##Board##ra8d1_ek##"/>
-    <option key="#SELECTED_TOOLCHAIN#" value="gcc-arm-embedded"/>
-    <option key="#ToolchainVersion#" value="13.2.1.arm-13-7"/>
+    <option key="#SELECTED_TOOLCHAIN#" value="clang_arm"/>
+    <option key="#ToolchainVersion#" value="17.0.1"/>
   </generalSettings>
   <raBspConfiguration/>
   <raClockConfiguration>
@@ -179,6 +179,7 @@
       <configSetting altId="p809.output.low" configurationId="p809"/>
       <configSetting altId="p810.input" configurationId="p810"/>
       <configSetting altId="p811.input" configurationId="p811"/>
+      <configSetting altId="p812.output.high" configurationId="p812"/>
       <configSetting altId="p813.output.low" configurationId="p813"/>
       <configSetting altId="p907.input" configurationId="p907"/>
       <configSetting altId="pa01.input" configurationId="pa01"/>

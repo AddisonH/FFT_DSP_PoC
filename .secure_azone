@@ -127,6 +127,7 @@
             <slot name="P809" secure="true"/>
             <slot name="P810" secure="true"/>
             <slot name="P811" secure="true"/>
+            <slot name="P812" secure="true"/>
             <slot name="P813" secure="true"/>
             <slot name="P814" secure="true"/>
             <slot name="P815" secure="true"/>
@@ -175,5 +176,10 @@
             <slot name="PB07" secure="true"/>
         </peripheral>
         <peripheral name="ADC0" group="ADC" security=""/>
+        <peripheral name="GPT0" group="GPT" security=""/>
+        <peripheral name="ICU">
+            <slot name="IRQ0" secure="true"/>
+            <slot name="IRQ1" secure="true"/>
+        </peripheral>
     </partition>
 </azone>

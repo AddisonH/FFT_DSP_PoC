@@ -18,116 +18,186 @@
  * OF SUCH LOSS, DAMAGES, CLAIMS OR COSTS.
  **********************************************************************************************************************/
 
+#include "config.h"
 #include "hal_data.h"
 #include "arm_math.h"
+#include "common_utils.h"
+#include <stdbool.h>
 
-#define TEST_LENGTH_SAMPLES 1024
-#define NUM_TAPS 29
+/* Application error */
+#define APP_ASSERT(a)   \
+{                       \
+    if ((a))            \
+    {                   \
+        /* Break */     \
+        __BKPT(0);      \
+    }                   \
+}
 
 void R_BSP_WarmStart(bsp_warm_start_event_t event);
-int32_t real_fft(float32_t* input, float32_t* output);
+int16_t real_fft_mag_f32(float32_t* input, float32_t* output, float32_t* magnitude);
 void fir_f32(float32_t* input, float32_t* output);
 
-extern bsp_leds_t g_bsp_leds;
-extern float32_t testInputSignal_f32[TEST_LENGTH_SAMPLES];
-extern float32_t unfilteredFFTOutput_f32[TEST_LENGTH_SAMPLES];
-extern float32_t filteredSignal_f32[TEST_LENGTH_SAMPLES];
-extern float32_t filteredFFTOutput_f32[TEST_LENGTH_SAMPLES];
+extern float32_t real_input_signal_f32[SAMPLE_BUFFER_LENGTH];
+extern float32_t test_input_signal_f32[SAMPLE_BUFFER_LENGTH];
+extern float32_t unfiltered_FFT_output_f32[SAMPLE_BUFFER_LENGTH];
+extern float32_t unfiltered_FFT_mag_f32[SAMPLE_BUFFER_LENGTH/2];
+extern float32_t filtered_output_f32[SAMPLE_BUFFER_LENGTH];
+extern float32_t filtered_FFT_output_f32[SAMPLE_BUFFER_LENGTH];
+extern float32_t filtered_FFT_mag_f32[SAMPLE_BUFFER_LENGTH/2];
+extern float32_t temp_buffer[SAMPLE_BUFFER_LENGTH];
+extern uint32_t raw_adc_buffer[SAMPLE_BUFFER_LENGTH];
 
-const uint32_t numTaps = NUM_TAPS;
-const float32_t firCoeffs32[NUM_TAPS] = {
-  -0.0018225230f, -0.0015879294f, +0.0000000000f, +0.0036977508f, +0.0080754303f, +0.0085302217f, -0.0000000000f, -0.0173976984f,
-  -0.0341458607f, -0.0333591565f, +0.0000000000f, +0.0676308395f, +0.1522061835f, +0.2229246956f, +0.2504960933f, +0.2229246956f,
-  +0.1522061835f, +0.0676308395f, +0.0000000000f, -0.0333591565f, -0.0341458607f, -0.0173976984f, -0.0000000000f, +0.0085302217f,
-  +0.0080754303f, +0.0036977508f, +0.0000000000f, -0.0015879294f, -0.0018225230f
+static volatile uint16_t buffer_index = 0;
+static volatile bool buffer_full = false;
+static const float32_t vref = 3.3f;
+
+const float32_t fir_coeffs_f32[NUM_TAPS] = {
+    -0.00063047f, -0.00181857f, -0.00256194f, -0.00158749f, 0.00236951f, 0.00833250f, 0.01180361f, 0.00675930f,
+    -0.00917451f, -0.02973091f, -0.03981645f, -0.02230165f, 0.03102797f, 0.11114350f, 0.19245540f, 0.24373020f,
+    0.24373020f, 0.19245540f, 0.11114350f, 0.03102797f, -0.02230165f, -0.03981645f, -0.02973091f, -0.00917451f,
+    0.00675930f, 0.01180361f, 0.00833250f, 0.00236951f, -0.00158749f, -0.00256194f, -0.00181857f, -0.00063047f
 };
 
-/*******************************************************************************************************************//**
- * @brief  Blinky example application
- *
- * Blinks all leds at a rate of 1 second using the software delay function provided by the BSP.
- *
- **********************************************************************************************************************/
-void hal_entry (void)
+void g_timer0_cb(timer_callback_args_t *p_args)
 {
-#if BSP_TZ_SECURE_BUILD
+    FSP_PARAMETER_NOT_USED(p_args);
 
-    /* Enter non-secure code */
-    R_BSP_NonSecureEnter();
-#endif
+    R_ADC_ScanStart(&g_adc0_ctrl);
+}
 
-    /* Define the units to be used with the software delay function */
-    const bsp_delay_units_t bsp_delay_units = BSP_DELAY_UNITS_MILLISECONDS;
+void g_adc0_cb(adc_callback_args_t *p_args)
+{
+    if(ADC_EVENT_SCAN_COMPLETE == p_args->event) {
+        uint32_t data;
+        fsp_err_t err = R_ADC_Read32(&g_adc0_ctrl, ADC_CHANNEL_0, &data);
 
-    /* Set the blink frequency (must be <= bsp_delay_units */
-    const uint32_t freq_in_hz = 2;
-
-    /* Calculate the delay in terms of bsp_delay_units */
-    const uint32_t delay = bsp_delay_units / freq_in_hz;
-
-    /* LED type structure */
-    bsp_leds_t leds = g_bsp_leds;
-
-    /* If this board has no LEDs then trap here */
-    if (0 == leds.led_count)
-    {
-        while (1)
-        {
-            ;                          // There are no LEDs on this board
+        if (err != FSP_SUCCESS) {
+            APP_PRINT("ADC ERR CODE: %d\n", err);
         }
-    }
+        
+        if(buffer_index < SAMPLE_BUFFER_LENGTH) {
+            raw_adc_buffer[buffer_index++] = data;
 
-    /* Holds level to set for pins */
-    bsp_io_level_t pin_level = BSP_IO_LEVEL_LOW;
-
-    while (1)
-    {
-        /* Enable access to the PFS registers. If using r_ioport module then register protection is automatically
-         * handled. This code uses BSP IO functions to show how it is used.
-         */
-        R_BSP_PinAccessEnable();
-
-        /* Update all board LEDs */
-        for (uint32_t i = 0; i < leds.led_count; i++)
-        {
-            /* Get pin to toggle */
-            uint32_t pin = leds.p_leds[i];
-
-            /* Write to this pin */
-            R_BSP_PinWrite((bsp_io_port_pin_t) pin, pin_level);
+            if(buffer_index >= SAMPLE_BUFFER_LENGTH) {
+                buffer_full = true;
+            }
         }
-
-        /* Protect PFS registers */
-        R_BSP_PinAccessDisable();
-
-        /* Toggle level for next write */
-        if (BSP_IO_LEVEL_LOW == pin_level)
-        {
-            pin_level = BSP_IO_LEVEL_HIGH;
-        }
-        else
-        {
-            pin_level = BSP_IO_LEVEL_LOW;
-        }
-
-        // Generate unfiltered FFT from input signal
-        real_fft(testInputSignal_f32, unfilteredFFTOutput_f32);
-
-        // Filter input signal
-        fir_f32(testInputSignal_f32, filteredSignal_f32);
-
-        real_fft(filteredSignal_f32, filteredFFTOutput_f32);
-
-
-        /* Delay */
-        R_BSP_SoftwareDelay(delay, bsp_delay_units);
     }
 }
 
-int32_t real_fft(float32_t* input, float32_t* output)
+void hal_entry (void)
 {
-    uint32_t fftSize = 1024;
-    uint32_t ifftFlag = 0;
+    #if BSP_TZ_SECURE_BUILD
+
+    /* Enter non-secure code */
+    R_BSP_NonSecureEnter();
+    #endif
+    int16_t fft_status = ARM_MATH_SUCCESS;
+    int16_t filtered_fft_status = ARM_MATH_SUCCESS;
+
+    fsp_err_t err;
+
+    #ifdef USE_ADC_DATA
+    err = R_ADC_Open(&g_adc0_ctrl, &g_adc0_cfg);
+    APP_ASSERT(err);
+    err = R_ADC_ScanCfg(&g_adc0_ctrl, &g_adc0_channel_cfg);
+    APP_ASSERT(err);
+    err = R_ADC_ScanStart(&g_adc0_ctrl);
+    APP_ASSERT(err);
+
+    err = R_GPT_Open(&g_timer0_ctrl, &g_timer0_cfg);
+    APP_ASSERT(err);
+    err = R_GPT_Start(&g_timer0_ctrl);
+    APP_ASSERT(err);
+    #else
+    buffer_full = true;
+    #endif
+
+    while (1)
+    {
+        if(buffer_full) {
+            #ifdef USE_ADC_DATA
+            // Process ADC data buffer
+            for (uint16_t i = 0; i < SAMPLE_BUFFER_LENGTH; i++) {
+                float32_t sample = ((float32_t)raw_adc_buffer[i] / 4095.0f) * vref;
+                real_input_signal_f32[i] = sample - (vref / 2.0f);
+            }
+            __disable_irq();
+
+            // Reset buffer index and flag
+            buffer_index = 0;
+            buffer_full = false;
+
+            __enable_irq();
+            #endif
+
+            #ifdef INSTRUCTION_BENCH
+            // Instruction bench
+            uint32_t ts_0 = 0;
+            uint32_t ts_fft = 0;
+            uint32_t ts_filter = 0;
+            uint32_t ts_fft2 = 0;
+            uint32_t fft_cycle = 0;
+            uint32_t filter_cycle = 0;
+            uint32_t fft2_cycle = 0;
+            uint32_t total_cycle = 0;
+
+            ts_0 = DWT->CYCCNT;
+
+            R_IOPORT_PinWrite(&g_ioport_ctrl, BSP_IO_PORT_08_PIN_12, BSP_IO_LEVEL_HIGH);
+            #endif
+
+            // FFT modifies the source data so need to copy to temp buffer
+            #ifdef USE_ADC_DATA
+            memcpy(temp_buffer, real_input_signal_f32, SAMPLE_BUFFER_LENGTH);
+            #else
+            memcpy(temp_buffer, test_input_signal_f32, SAMPLE_BUFFER_LENGTH);
+            #endif
+
+            // Generate unfiltered FFT from input signal
+            fft_status = real_fft_mag_f32(temp_buffer, unfiltered_FFT_output_f32, unfiltered_FFT_mag_f32);
+            if (fft_status != ARM_MATH_SUCCESS) {
+                APP_PRINT("Error in FFT computation: %d\n", fft_status);
+            }
+            #ifdef INSTRUCTION_BENCH
+            ts_fft = DWT->CYCCNT;
+            #endif
+
+            // Filter input signal
+            fir_f32(real_input_signal_f32, filtered_output_f32);
+            #ifdef INSTRUCTION_BENCH
+            ts_filter = DWT->CYCCNT;
+            #endif
+
+            // FFT filtered signal
+            filtered_fft_status = real_fft_mag_f32(filtered_output_f32, filtered_FFT_output_f32, filtered_FFT_mag_f32);
+            if (filtered_fft_status != ARM_MATH_SUCCESS) {
+                APP_PRINT("Error in filtered FFT computation: %d\n", filtered_fft_status);
+            }
+            #ifdef INSTRUCTION_BENCH
+            ts_fft2 = DWT->CYCCNT;
+
+            R_IOPORT_PinWrite(&g_ioport_ctrl, BSP_IO_PORT_08_PIN_12, BSP_IO_LEVEL_LOW);
+
+            fft_cycle = ts_fft > ts_0? ts_fft - ts_0 : ~(ts_0 - ts_fft);
+            filter_cycle = ts_filter > ts_fft? ts_filter - ts_fft : ~(ts_fft - ts_filter);
+            fft2_cycle = ts_fft2 > ts_filter? ts_fft2 - ts_filter : ~(ts_filter - ts_fft2);
+            total_cycle = ts_fft2 > ts_0? ts_fft2 - ts_0 : ~(ts_0 - ts_fft2);
+
+            APP_PRINT("FFT input signal clock cycle: %d\n", fft_cycle);
+            APP_PRINT("Filter input signal clock cycle: %d\n", filter_cycle);
+            APP_PRINT("FFT filtered signal clock cycle: %d\n", fft2_cycle);
+            APP_PRINT("Total clock cycle: %d\n", total_cycle);
+            #endif
+        }
+    }
+}
+
+int16_t real_fft_mag_f32(float32_t* input, float32_t* output, float32_t* magnitude)
+{
+    uint16_t fftSize = 1024;
+    uint8_t ifftFlag = 0;
     arm_rfft_fast_instance_f32 varInstRfft32;
     arm_status status;
 
@@ -137,19 +207,20 @@ int32_t real_fft(float32_t* input, float32_t* output)
 
     /* Process the data through the CFFT/CIFFT module */
     arm_rfft_fast_f32(&varInstRfft32, input, output, ifftFlag);
+    arm_cmplx_mag_f32(output, magnitude, fftSize/2);
 
     return status;
 }
 
-void fir_f32(float32_t* input, float32_t* output) {
+void fir_f32(float32_t* input, float32_t* output)
+{
     uint32_t blockSize = 32;
-    uint32_t numBlocks = TEST_LENGTH_SAMPLES/blockSize;
-    float32_t firStateF32[blockSize + numTaps - 1];
+    uint32_t numBlocks = SAMPLE_BUFFER_LENGTH/blockSize;
+    float32_t firStateF32[NUM_TAPS + 2 * blockSize - 1];
     arm_fir_instance_f32 firInstance;
-    arm_status status;
 
     /* Call FIR init function to initialize the instance structure. */
-    arm_fir_init_f32(&firInstance, numTaps, (float32_t *)&firCoeffs32[0], &firStateF32[0], blockSize);
+    arm_fir_init_f32(&firInstance, NUM_TAPS, (float32_t *)&fir_coeffs_f32[0], &firStateF32[0], blockSize);
 
     for(uint32_t i = 0; i < numBlocks; i++)
     {

@@ -82,7 +82,7 @@ FSP Configuration
     Cache settings: Data cache: Disabled
     
   RA Common
-    Main stack size (bytes): 0x400
+    Main stack size (bytes): 0x2000
     Heap size (bytes): 0
     MCU Vcc (mV): 3300
     Parameter checking: Disabled
@@ -280,7 +280,7 @@ FSP Configuration
       P809 R2 GPIO PMOD2_8_RESET L - "Output mode (Initial Low)" - - "OSPI: OM_SCLKN" - IO - - 
       P810 P4 GPIO PMOD2_9_GPIO - - "Input mode" - - "SDHI1: SD1CLK; ULPT0: ULPTOA0" - IO - - 
       P811 M6 GPIO PMOD2_10_GPIO - - "Input mode" - - "SDHI1: SD1CMD; ULPT0: ULPTOB0; USB FS: USB_ID" - IO - - 
-      P812 R4 - - - - Disabled - - "ADC1: AN122; SDHI1: SD1DAT0; USB FS: USB_EXICEN" - None - - 
+      P812 R4 GPIO - L - "Output mode (Initial High)" - - "ADC1: AN122; SDHI1: SD1DAT0; USB FS: USB_EXICEN" - IO - - 
       P813 J5 GPIO ARDUINO_RESET L - "Output mode (Initial Low)" - - "BUS: D20; SDRAM: DQ20" - IO - - 
       P814 A14 "USB FS_USB_DP" USB_DP L - "Peripheral mode" - - "CANFD0: CRX0; GPT8: GTIOC8B; USB FS: USB_DP" - IO - - 
       P815 B14 "USB FS_USB_DM" USB_DM L - "Peripheral mode" - - "CANFD0: CTX0; GPT8: GTIOC8A; USB FS: USB_DM" - IO - - 
@@ -505,7 +505,7 @@ FSP Configuration
       P809 R2 - PMOD2_8_RESET L - Disabled - - "OSPI: OM_SCLKN" - IO - - 
       P810 P4 - PMOD2_9_GPIO - - Disabled - - "SDHI1: SD1CLK; ULPT0: ULPTOA0" - IO - - 
       P811 M6 - PMOD2_10_GPIO - - Disabled - - "SDHI1: SD1CMD; ULPT0: ULPTOB0; USB FS: USB_ID" - IO - - 
-      P812 R4 - - - - Disabled - - "ADC1: AN122; SDHI1: SD1DAT0; USB FS: USB_EXICEN" - None - - 
+      P812 R4 - - L - Disabled - - "ADC1: AN122; SDHI1: SD1DAT0; USB FS: USB_EXICEN" - IO - - 
       P813 J5 - ARDUINO_RESET L - Disabled - - "BUS: D20; SDRAM: DQ20" - IO - - 
       P814 A14 - USB_DP L - Disabled - - "CANFD0: CRX0; GPT8: GTIOC8B; USB FS: USB_DP" - IO - - 
       P815 B14 - USB_DM L - Disabled - - "CANFD0: CTX0; GPT8: GTIOC8A; USB FS: USB_DM" - IO - - 
@@ -603,10 +603,15 @@ FSP Configuration
   Module "I/O Port (r_ioport)"
     Parameter Checking: Default (BSP)
     
+  Module "Arm CMSIS5 DSP Library Source"
   Module "ADC (r_adc)"
     Parameter Checking: Default (BSP)
     
-  Module "Arm CMSIS5 DSP Library Source"
+  Module "Timer, General PWM (r_gpt)"
+    Parameter Checking: Default (BSP)
+    Pin Output Support: Disabled
+    Write Protect Enable: Disabled
+    
   HAL
     Instance "g_ioport I/O Port (r_ioport)"
       Name: g_ioport
@@ -616,6 +621,7 @@ FSP Configuration
       4th Port ELC Trigger Source: Disabled
       Pin Configuration Name: g_bsp_pin_cfg
       
+    Instance "Arm CMSIS5 DSP Library Source"
     Instance "g_adc0 ADC (r_adc)"
       General: Name: g_adc0
       General: Unit: 0
@@ -624,7 +630,7 @@ FSP Configuration
       General: Clear after read: On
       General: Mode: Single Scan
       General: Double-trigger: Disabled
-      Input: Channel Scan Mask (channel availability varies by MCU): 
+      Input: Channel Scan Mask (channel availability varies by MCU): Channel 0
       Input: Group B Scan Mask (channel availability varies by MCU): 
       Interrupts: Normal/Group A Trigger: Software
       Interrupts: Group B Trigger: Disabled
@@ -646,11 +652,58 @@ FSP Configuration
       Input: Window Compare: Window B: Comparison mode: Less Than or Outside Window
       Input: Window Compare: Window B: Lower Reference: 0
       Input: Window Compare: Window B: Upper Reference: 0
-      Interrupts: Callback: NULL
-      Interrupts: Scan End Interrupt Priority: Disabled
+      Interrupts: Callback: g_adc0_cb
+      Interrupts: Scan End Interrupt Priority: Priority 5
       Interrupts: Scan End Group B Interrupt Priority: Disabled
       Interrupts: Window Compare A Interrupt Priority: Disabled
       Interrupts: Window Compare B Interrupt Priority: Disabled
       Extra: ADC Ring Buffer: Disabled
       
-    Instance "Arm CMSIS5 DSP Library Source"
+    Instance "g_timer0 Timer, General PWM (r_gpt)"
+      General: Name: g_timer0
+      General: Channel: 0
+      General: Mode: Periodic
+      General: Period: 50
+      General: Period Unit: Microseconds
+      Output: Custom Waveform: GTIOA: Initial Output Level: Pin Level Low
+      Output: Custom Waveform: GTIOA: Cycle End Output Level: Pin Level Retain
+      Output: Custom Waveform: GTIOA: Compare Match Output Level: Pin Level Retain
+      Output: Custom Waveform: GTIOA: Retain Output Level at Count Stop: Disabled
+      Output: Custom Waveform: GTIOB: Initial Output Level: Pin Level Low
+      Output: Custom Waveform: GTIOB: Cycle End Output Level: Pin Level Retain
+      Output: Custom Waveform: GTIOB: Compare Match Output Level: Pin Level Retain
+      Output: Custom Waveform: GTIOB: Retain Output Level at Count Stop: Disabled
+      Output: Custom Waveform: Custom Waveform Enable: Disabled
+      Output: Duty Cycle Percent (only applicable in PWM mode): 50
+      Output: GTIOCA Output Enabled: False
+      Output: GTIOCA Stop Level: Pin Level Low
+      Output: GTIOCB Output Enabled: False
+      Output: GTIOCB Stop Level: Pin Level Low
+      Input: Count Up Source: 
+      Input: Count Down Source: 
+      Input: Start Source: 
+      Input: Stop Source: 
+      Input: Clear Source: 
+      Input: Capture A Source: 
+      Input: Capture B Source: 
+      Input: Noise Filter A Sampling Clock Select: No Filter
+      Input: Noise Filter B Sampling Clock Select: No Filter
+      Interrupts: Callback: g_timer0_cb
+      Interrupts: Overflow/Crest Interrupt Priority: Priority 5
+      Interrupts: Capture A Interrupt Priority: Disabled
+      Interrupts: Capture B Interrupt Priority: Disabled
+      Interrupts: Underflow/Trough Interrupt Priority: Disabled
+      Extra Features: Extra Features: Disabled
+      Extra Features: Output Disable: POEG Link: POEG Channel 0
+      Extra Features: Output Disable: Output Disable POEG Trigger: 
+      Extra Features: ADC Trigger: Start Event Trigger (Channels with GTINTAD only): 
+      Extra Features: Dead Time (Value range varies with Channel): Dead Time Count Up (Raw Counts): 0
+      Extra Features: Dead Time (Value range varies with Channel): Dead Time Count Down (Raw Counts) (Channels with GTDVD only): 0
+      Extra Features: ADC Trigger (Channels with GTADTRA only): ADC A Compare Match (Raw Counts): 0
+      Extra Features: ADC Trigger (Channels with GTADTRB only): ADC B Compare Match (Raw Counts): 0
+      Extra Features: Interrupt Skipping (Channels with GTITC only): Interrupt to Count: None
+      Extra Features: Interrupt Skipping (Channels with GTITC only): Interrupt Skip Count: 0
+      Extra Features: Interrupt Skipping (Channels with GTITC only): Skip ADC Events: None
+      Extra Features: Output Disable: GTIOCA Disable Setting: Disable Prohibited
+      Extra Features: Output Disable: GTIOCB Disable Setting: Disable Prohibited
+      

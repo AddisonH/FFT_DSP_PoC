@@ -53,3 +53,41 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Ignore build directories
+/build/
+/Debug/
+/Release/
+
+# Ignore e2 studio specific files
+/.settings/
+/.metadata/
+/RemoteSystemsTempFiles/
+/.snapshots/
+/.cproject
+/.project
+/.loadpath
+/.externalToolBuilders/
+/bin/
+/gen/
+/ra/
+/ra_gen/
+/ra_cfg/
+/script/
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.bak
+*.swp
+
+# Ignore user-specific files
+*.user
+*.suo
+*.userprefs
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc

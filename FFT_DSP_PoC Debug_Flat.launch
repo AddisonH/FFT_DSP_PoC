@@ -21,10 +21,17 @@
     <booleanAttribute key="com.renesas.cdt.core.setResume" value="true"/>
     <stringAttribute key="com.renesas.cdt.core.targetDevice" value="R7FA8D1BH"/>
     <booleanAttribute key="com.renesas.cdt.core.useRemoteTarget" value="true"/>
+    <stringAttribute key="com.renesas.cdt.debug.ioview.dsf.registerSelection0" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;selectedRegisterList ioFilePath=&quot;C:\Users\a5147268\.eclipse\com.renesas.platform_1775370346\DebugComp\RA\IoFiles\R7FA8D1BH.svd&quot;/&gt;&#13;&#10;"/>
     <stringAttribute key="com.renesas.cdt.launch.dsf.IO_MAP" value="${support_area_loc}"/>
     <booleanAttribute key="com.renesas.cdt.launch.dsf.USE_DEFAULT_IO_MAP" value="true"/>
     <stringAttribute key="com.renesas.cdt.launch.dsf.launchSeqType" value="com.renesas.cdt.launch.dsf.launchSequence.e2GdbServer"/>
     <stringAttribute key="com.renesas.cdt.launch.dsf.serverPath" value="${renesas.support.targetLoc:com.renesas.ide.supportfiles.ra.debug.debugSupportFileTarget}\e2-server-gdb"/>
+    <listAttribute key="com.renesas.cdt.launch.ui.address.mruList.memoryMonitorExpression">
+        <listEntry value="filtered_FFT_mag_f32"/>
+        <listEntry value="filtered_output_f32"/>
+        <listEntry value="unfiltered_FFT_mag_f32"/>
+        <listEntry value="test_input_signal_f32"/>
+    </listAttribute>
     <booleanAttribute key="com.renesas.hardwaredebug.arm.jlink.break.allowSimulation" value="false"/>
     <booleanAttribute key="com.renesas.hardwaredebug.arm.jlink.break.useFlashBreakpoints.resetorrepurposed" value="true"/>
     <stringAttribute key="com.renesas.hardwaredebug.arm.jlink.cfiFlash.flashBusType" value="SPIBSC"/>
@@ -95,4 +102,6 @@
         <listEntry value="4"/>
     </listAttribute>
     <booleanAttribute key="org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND" value="false"/>
+    <stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;&gt;&lt;gdbmemoryBlockExpression address=&quot;570490812&quot; core_thread_id=&quot;1_i1&quot; label=&quot;real_input_signal_f32&quot;&gt;&lt;memoryRendering id=&quot;org.eclipse.debug.ui.rendering.hexint&quot;&gt;&lt;renderingInstance containerId=&quot;org.eclipse.debug.ui.MemoryView.RenderingViewPane.1&quot; viewId=&quot;org.eclipse.debug.ui.MemoryView&quot; viewSecondaryId=&quot;&quot;/&gt;&lt;/memoryRendering&gt;&lt;/gdbmemoryBlockExpression&gt;&lt;gdbmemoryBlockExpression address=&quot;570474428&quot; core_thread_id=&quot;1_i1&quot; label=&quot;unfiltered_FFT_mag_f32&quot;&gt;&lt;memoryRendering id=&quot;org.eclipse.debug.ui.rendering.hexint&quot;&gt;&lt;renderingInstance containerId=&quot;org.eclipse.debug.ui.MemoryView.RenderingViewPane.1&quot; viewId=&quot;org.eclipse.debug.ui.MemoryView&quot; viewSecondaryId=&quot;&quot;/&gt;&lt;/memoryRendering&gt;&lt;/gdbmemoryBlockExpression&gt;&lt;gdbmemoryBlockExpression address=&quot;570476476&quot; core_thread_id=&quot;1_i1&quot; label=&quot;filtered_output_f32&quot;&gt;&lt;memoryRendering id=&quot;org.eclipse.debug.ui.rendering.hexint&quot;&gt;&lt;renderingInstance containerId=&quot;org.eclipse.debug.ui.MemoryView.RenderingViewPane.1&quot; viewId=&quot;org.eclipse.debug.ui.MemoryView&quot; viewSecondaryId=&quot;&quot;/&gt;&lt;/memoryRendering&gt;&lt;/gdbmemoryBlockExpression&gt;&lt;gdbmemoryBlockExpression address=&quot;570484668&quot; core_thread_id=&quot;1_i1&quot; label=&quot;filtered_FFT_mag_f32&quot;&gt;&lt;memoryRendering id=&quot;org.eclipse.debug.ui.rendering.hexint&quot;&gt;&lt;renderingInstance containerId=&quot;org.eclipse.debug.ui.MemoryView.RenderingViewPane.1&quot; viewId=&quot;org.eclipse.debug.ui.MemoryView&quot; viewSecondaryId=&quot;&quot;/&gt;&lt;/memoryRendering&gt;&lt;/gdbmemoryBlockExpression&gt;&lt;/memoryBlockExpressionList&gt;"/>
+    <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
 </launchConfiguration>
