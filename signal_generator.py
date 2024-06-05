@@ -6,16 +6,16 @@ def main():
     ################################################################
     # Define input file paths here
     
-    real_signal_path ='real_signal_out.txt'
+    real_signal_path ='data_files/real_signal_out.txt'
     real_signal_data = read_data(real_signal_path)
     
-    fft_input_path = 'unfilt_fft_mag_out.txt'
+    fft_input_path = 'data_files/unfilt_fft_mag_out.txt'
     fft_input_data = read_data(fft_input_path)
     
-    filter_input_path = 'filter_out.txt'
+    filter_input_path = 'data_files/filter_out.txt'
     filter_input_data = read_data(filter_input_path)
     
-    fft_filter_input_path = 'filt_fft_mag_out.txt'
+    fft_filter_input_path = 'data_files/filt_fft_mag_out.txt'
     fft_filter_input_data = read_data(fft_filter_input_path)
     
     ################################################################
