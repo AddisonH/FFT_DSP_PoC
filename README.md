@@ -26,6 +26,14 @@ The FFT_DSP_PoC project is a proof-of-concept (PoC) designed to showcase the usa
 git clone https://github.com/AddisonH/FFT_DSP_PoC.git
 ```
 
+### Setting up the Board
+
+To setup the board to use the ADC:
+1. Connect VREFH0 to AVCC0.
+2. Connect VREFL0 to AVSS0.
+3. Connect your input signal to Pin P004.
+4. Your input signal should stay between 0 and 3.3V. ADC VREF is at 3.3V.
+
 ### Building the Project
 
 1. Open Renesas e2 studio.
