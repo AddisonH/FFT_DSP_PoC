@@ -74,6 +74,7 @@ dkms.conf
 /ra_gen/
 /ra_cfg/
 /script/
+/.cache/
 
 # Ignore log files
 *.log
