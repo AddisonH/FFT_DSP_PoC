@@ -60,7 +60,6 @@ dkms.conf
 /Release/
 
 # Ignore e2 studio specific files
-/.settings/
 /.metadata/
 /RemoteSystemsTempFiles/
 /.snapshots/
@@ -73,7 +72,6 @@ dkms.conf
 /ra/
 /ra_gen/
 /ra_cfg/
-/script/
 /.cache/
 
 # Ignore log files
