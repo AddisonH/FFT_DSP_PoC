@@ -60,12 +60,8 @@ dkms.conf
 /Release/
 
 # Ignore e2 studio specific files
-/.metadata/
 /RemoteSystemsTempFiles/
 /.snapshots/
-/.cproject
-/.project
-/.loadpath
 /.externalToolBuilders/
 /bin/
 /gen/
